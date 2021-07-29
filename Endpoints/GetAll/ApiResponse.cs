@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ociusApi.Models;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -52,9 +53,6 @@ namespace ociusApi
 
             var utcMidnight = new DateTimeOffset(DateTime.UtcNow.Date).ToUnixTimeMilliseconds();
             Console.WriteLine("UTC MIDNIGHT timestamp: " + utcMidnight);
-            
-
-
 
             var droneTimespans = await Database.GetByTimespan(Today, supportedDroneNames, timespan.Value);
             if (ticks < utcMidnight)
@@ -63,10 +61,15 @@ namespace ociusApi
                 var dataFromYesterday = await Database.GetByTimespan(Yesterday, supportedDroneNames, timespan.Value);
                 droneTimespans.AddRange(dataFromYesterday);
             }
-            var dronesJson = JsonConvert.SerializeObject(droneTimespans);
+
+            var dronesJson = JsonConvert.SerializeObject(FilterLocations(droneTimespans));
             return CreateApiResponse(dronesJson);
         }
 
+        private static IEnumerable<ociusApi.DroneLocation> FilterLocations(List<DroneLocation> timespans)
+        {
+            return timespans.Where(x => x.Lat != "0");
+        }
         private static ApiResponse CreateApiResponse(string json)
         {
             var headers = new Dictionary<string, string>() { { "Access-Control-Allow-Origin", "*" } };

@@ -50,13 +50,23 @@ namespace RawDataToClientData
 
             var batteryVoltages = new List<string>();
             var batteryPercentages = new List<string>();
+
             if (json.ContainsKey("tqb"))
             {
                 Console.WriteLine($"found tqb for {name}");
-                var batteryData = JsonConvert.DeserializeObject<Batteries>(data);
+                var batteryData = new Batteries { };
+                if (json["tqb"].Type == JTokenType.Array)
+                {
+                    batteryData = JsonConvert.DeserializeObject<Batteries>(data);
+                }
+                else
+                {
+                    batteryData.Tqb.Add(JsonConvert.DeserializeObject<Battery>(json["tqb"].ToString()));
+                }
                 batteryVoltages = batteryData.Tqb.Select(battery => DroneUtils.ParseVoltage(battery)).ToList();
                 batteryPercentages = batteryData.Tqb.Select(battery => battery.Pcnt).ToList();
             }
+
 
             var isSensitive = await SensitivityRepository.GetDroneSensitivity(name);
 

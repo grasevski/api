@@ -62,7 +62,7 @@ namespace GetCameraNames
         public async Task<string> FunctionHandler()
         {
             var droneCameras = await GetDroneCameras();
-            
+
             var result = await SaveToDatabase(droneCameras);
 
             return result == "Success" ? CreateSuccessResult(droneCameras) : result;
@@ -72,9 +72,10 @@ namespace GetCameraNames
         {
             var drones = await GetDroneNames();
             var cameras = await AddCameraNames();
+
             var result = new List<Drone>();
- 
-            foreach(var camera in cameras)
+
+            foreach (var camera in PrioritiseCameras(cameras))
             {
                 if (drones.ContainsKey(camera.Id))
                 {
@@ -86,6 +87,11 @@ namespace GetCameraNames
             return result;
         }
 
+        public IEnumerable<DroneCamera> PrioritiseCameras(IEnumerable<DroneCamera> cameras)
+        {
+            return cameras.OrderBy(d => d.Name != "masthead");
+        }
+
         public async Task<IDictionary<string, Drone>> GetDroneNames()
         {
             var namesEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listrobots&nodeflate";
@@ -95,7 +101,7 @@ namespace GetCameraNames
 
             var result = new Dictionary<string, Drone>();
 
-            foreach(var drone in drones)
+            foreach (var drone in drones)
             {
                 drone.Cameras = string.Empty;
                 result.Add(drone.Id, drone);
