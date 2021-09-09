@@ -35,21 +35,6 @@ namespace ociusApi
             return droneNames;
         }
 
-        public static QueryRequest CreateLatestDroneRequestDeprecated(string resource)
-        {
-            var Date = DateTime.UtcNow.ToString("yyyyMMdd");
-
-            return new QueryRequest
-            {
-                TableName = resource,
-                KeyConditionExpression = "#date = :date",
-                ExpressionAttributeNames = new Dictionary<string, string> { { "#date", "Date" } },
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":date", new AttributeValue { N = Date } } },
-                ScanIndexForward = false,
-                Limit = 3 // This should come from the database
-            };
-        }
-
         public static QueryRequest CreateLatestDronesRequest(string date, string droneName)
         {
             var partitionKeyValue = droneName + date;
@@ -75,20 +60,6 @@ namespace ociusApi
                 return new DroneSensor();
             } 
             return DroneSensor.CreateDrone(queryResponse.Items[0]);
-        }
-
-        public static QueryRequest CreateDroneByTimeRequestDeprecated(string date, long timestamp, string resource)
-        {
-            return new QueryRequest
-            {
-                TableName = resource,
-                KeyConditionExpression = "#date = :date and #timespan > :timespan ",
-                ExpressionAttributeNames = new Dictionary<string, string> { { "#timespan", "Timestamp" }, { "#date", "Date" } },
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
-                    { ":timespan", new AttributeValue { N = timestamp.ToString() } },
-                    { ":date", new AttributeValue { N = date } },
-                }
-            };
         }
 
         public static List<DroneLocation> ParseDroneByTimeRequest(QueryResponse queryResponse)

@@ -19,12 +19,6 @@ namespace ociusApi
             return Query.ParseSupportedDroneResponse(response);
         }
 
-        public async static Task<QueryResponse> GetLatestDeprecated(string resource)
-        {
-            var latestDronesRequest = Query.CreateLatestDroneRequestDeprecated(resource);
-            return await client.QueryAsync(latestDronesRequest); ;
-        }
-
         public async static Task<List<DroneSensor>> GetLatest(string date, List<string> supportedDroneNames)
         {
             var droneRequestTasks = new List<Task<DroneSensor>>();
@@ -37,17 +31,6 @@ namespace ociusApi
             var drones = await Task.WhenAll(droneRequestTasks);
 
             return new List<DroneSensor>(drones.Where(drone => DroneSensor.IsValidDrone(drone)));
-        }
-
-        public async static Task<QueryResponse> GetByTimespanDeprecated(string date, string timePeriod, string resource)
-        {
-            if (!IsValidTimePeriod(timePeriod)) return new QueryResponse();
-
-            var timeSpan = GetTimespan(timePeriod);
-
-            var dronesByTimespanRequest = Query.CreateDroneByTimeRequestDeprecated(date, timeSpan, resource);
-
-            return await client.QueryAsync(dronesByTimespanRequest);
         }
 
         public async static Task<List<DroneLocation>> GetByTimespan(string date, List<string> supportedDroneNames, string timePeriod)
