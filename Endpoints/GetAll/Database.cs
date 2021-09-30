@@ -19,13 +19,26 @@ namespace ociusApi
             return Query.ParseSupportedDroneResponse(response);
         }
 
-        public async static Task<List<DroneSensor>> GetLatest(string date, List<string> supportedDroneNames)
+        //TODO cache or combine with GetSupportedDrone
+        //TODO unsigned long
+        // replace delay for today/tomorrow.
+        // get current time on that day.
+
+        public async static Task<int> GetDelay()
+        {
+            var delayRequest = Query.CreateDelayRequest();
+            var delayResponse = await client.QueryAsync(delayRequest);
+            return Query.ParseDelayResponse(delayResponse);
+        }
+
+
+        public async static Task<List<DroneSensor>> GetLatest(string date, long timestamp, List<string> supportedDroneNames)
         {
             var droneRequestTasks = new List<Task<DroneSensor>>();
 
             foreach (var droneName in supportedDroneNames)
             {
-                droneRequestTasks.Add(QueryClientForDroneAsync(date, droneName));
+                droneRequestTasks.Add(QueryClientForDroneAsync(date, timestamp, droneName));
             }
 
             var drones = await Task.WhenAll(droneRequestTasks);
@@ -85,9 +98,9 @@ namespace ociusApi
             return currentTimestamp - milliseconds;
         }
 
-        private async static Task<DroneSensor> QueryClientForDroneAsync(string date, string droneName)
+        private async static Task<DroneSensor> QueryClientForDroneAsync(string date, long timestamp, string droneName)
         {
-            var latestDronesRequest = Query.CreateLatestDronesRequest(date, droneName);
+            var latestDronesRequest = Query.CreateLatestDronesRequest(date, timestamp, droneName);
             QueryResponse databaseResponse = await client.QueryAsync(latestDronesRequest);
 
             if (!Query.IsValidResponse(databaseResponse))

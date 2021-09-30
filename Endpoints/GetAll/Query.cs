@@ -23,6 +23,30 @@ namespace ociusApi
             };
         }
 
+        public static QueryRequest CreateDelayRequest()
+        {
+            return new QueryRequest{
+                TableName = "APIConfiguration",
+                KeyConditionExpression = "Setting = :partitionKeyVal",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":partitionKeyVal", new AttributeValue { S =  "Delay" } } },
+                Limit = 1
+            };
+        }
+
+        public static int ParseDelayResponse(QueryResponse delayResponse)
+        {
+            // assumes every drone has a name, this is a valid assumpuption since the name is the partition key
+            // If the table is changed, this may not be a valid assumption
+            if (!IsValidResponse(delayResponse)){
+                Console.WriteLine("Invalid Delay Response");
+                return 0;
+            }
+
+            var delay = Convert.ToInt32(delayResponse.Items[0]["Value"].N);
+            return delay;
+        }
+
+
         public static List<string> ParseSupportedDroneResponse(QueryResponse supportedDronesResponse)
         {
             // assumes every drone has a name, this is a valid assumpuption since the name is the partition key
@@ -35,18 +59,21 @@ namespace ociusApi
             return droneNames;
         }
 
-        public static QueryRequest CreateLatestDronesRequest(string date, string droneName)
+        public static QueryRequest CreateLatestDronesRequest(string date, long timestamp, string droneName)
         {
+
             var partitionKeyValue = droneName + date;
             return new QueryRequest
             {
                 TableName = "DroneDataSensors",
-                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue",
-                ExpressionAttributeNames = new Dictionary<string, string> { { "#partitionKeyName", "DroneName+Date" } },
+                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue and #sortKeyName <= :timestamp",
+                ExpressionAttributeNames = new Dictionary<string, string> { { "#partitionKeyName", "DroneName+Date" }, { "#sortKeyName", "Timestamp" } },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     { ":partitionKeyValue", new AttributeValue { S = partitionKeyValue } },
-                    { ":false", new AttributeValue { BOOL = false } }
+                    { ":false", new AttributeValue { BOOL = false } },
+                    { ":timestamp", new AttributeValue { N = timestamp.ToString()} }
                 },
+                //FilterExpression = "IsSensitive = :false AND Timestamp <= :timestamp",
                 FilterExpression = "IsSensitive = :false",
                 ScanIndexForward = false,
                 Limit = 1

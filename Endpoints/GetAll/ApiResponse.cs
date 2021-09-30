@@ -34,8 +34,15 @@ namespace ociusApi
         {
             Console.WriteLine("Loading latest data");
             var supportedDroneNames = await Database.GetSupportedDrones();
-            var drones = await Database.GetLatest(Today, supportedDroneNames);
+            var delay = await Database.GetDelay();
+
+            //TODO fix
+            var date = GetDate(-delay);
+            var timestamp = DateTimeOffset.UtcNow.AddDays(-delay).ToUnixTimeMilliseconds();
+
+            var drones = await Database.GetLatest(date, timestamp, supportedDroneNames);
             var dronesJson = JsonConvert.SerializeObject(drones);
+            //dronesJson = $"[{dronesJson}, {{\"delay\": \"{delay}\"}}, {{\"new_timestamp\": \"{timestamp}\"}}]";
             return CreateApiResponse(dronesJson);
         }
 
