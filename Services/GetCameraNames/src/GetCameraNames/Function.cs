@@ -73,18 +73,15 @@ namespace GetCameraNames
             var drones = await GetDroneNames();
             var cameras = await AddCameraNames();
 
-            var result = new List<Drone>();
-
             foreach (var camera in PrioritiseCameras(cameras))
             {
                 if (drones.ContainsKey(camera.Id))
                 {
-                    var drone = drones[camera.Id];
-                    drone.Cameras += $"{camera.Name},";
-                    result.Add(drone);
+                    drones[camera.Id].Cameras += $"{camera.Name},";
                 }
             }
-            return result;
+
+            return drones.Values.Where(d => d.Cameras.Length != 0);
         }
 
         public IEnumerable<DroneCamera> PrioritiseCameras(IEnumerable<DroneCamera> cameras)
@@ -130,7 +127,7 @@ namespace GetCameraNames
 
         public async Task<IEnumerable<DroneCamera>> AddCameraNames()
         {
-            var dataEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listcameranames&nodeflate";
+            var dataEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listcameras&nodeflate";
 
             var droneStatus = await Api.GetXml(dataEndpoint);
 
@@ -143,14 +140,25 @@ namespace GetCameraNames
 
             var xdoc = XDocument.Parse(cameraXml);
 
-            foreach (var elem in xdoc.Descendants("Name"))
+            foreach (var cam in FilterCameras(xdoc))
             {
+                var elem = cam.Element("Name");
                 var name = elem.Value.Split('_');
                 var drone = new DroneCamera { Id = name.First(), Name = name.Last() };
                 result.Add(drone);
             }
 
             return result;
+        }
+
+        public static IEnumerable<XElement> FilterCameras(XDocument xdoc){
+
+            IEnumerable<XElement> filteredCameras = 
+                from cam in xdoc.Descendants("Camera")
+                where (string)cam.Element("Record") == "True"
+                select cam;
+
+            return filteredCameras;
         }
 
         public string CreateSuccessResult(IEnumerable<Drone> droneCameras)
