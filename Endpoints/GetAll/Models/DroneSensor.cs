@@ -12,7 +12,21 @@ namespace ociusApi
         public string Timestamp { get; set; } = "0";
         public string Status { get; set; } = "INVALID";
         public Props Props { get; set; } = new Props();
-        
+
+        public string BoatColor { get; set; } = "#35b5e5"; // Default blue
+        public string SailColor => "#2f292d";
+
+        //TODO Move hardcoded colors into config table.
+        private static readonly Dictionary<string, string> NameToColor = new Dictionary<string, string> {
+            {"Bluey",  "#35b5e5"}, // Blue
+            {"Beacon", "#ff0000"}, // Red
+            {"Bonnie", "#ffff00"}, // Yellow
+            {"Brizo",  "5f08c2"},  // Dark Purple
+            {"Beth",   "#ffffff"}, // White
+            {"Bob",    "#b3b3b3"}, // Grey/Silver
+            {"Bruce",  "#ffff00"}  // Yellow
+        };
+
         public static DroneSensor CreateDrone(Dictionary<string, AttributeValue> attributes)
         {
             var drone = new DroneSensor();
@@ -55,10 +69,15 @@ namespace ociusApi
             props.Location = location;
             drone.Props = props;
 
+            if (NameToColor.ContainsKey(drone.Name)) {
+                drone.BoatColor = NameToColor[drone.Name];
+            }
+
             return drone;
         }
 
-        public static bool IsValidDrone(DroneSensor drone) {
+        public static bool IsValidDrone(DroneSensor drone)
+        {
             return (drone?.Status ?? "INVALID") != "INVALID";
         }
 
