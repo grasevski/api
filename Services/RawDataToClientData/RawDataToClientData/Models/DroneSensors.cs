@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json.Linq;
 using RawDataToClientData.Models;
 using System.Linq;
@@ -7,8 +8,170 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using RawDataToClientData.Repositories;
 
+using System.ComponentModel; // Debug
+using System.Text;
 namespace RawDataToClientData
 {
+
+    // Defines serialisation format
+    public class ContactOutputFormat : DefaultContractResolver {
+
+    protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+    {
+        IList<JsonProperty> properties = base.CreateProperties(type, memberSerialization);
+
+        foreach (var prop in properties) {
+            prop.PropertyName = prop.UnderlyingName;
+        }
+
+        return properties;
+    }
+}
+
+    public class Contact
+    {
+
+        // this.age = Infinity;
+        [JsonProperty("sensorid")]
+        public string SensorId { get; set; }
+
+        [JsonProperty("contactid")]
+        public string ContactId { get; set; }
+
+        [JsonProperty("phase")]
+        public string Phase { get; set; }
+
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = ""; //TODO set defaults for all
+
+        [JsonProperty("lat")]
+        public string Lat { get; set; }
+
+        [JsonProperty("lon")]
+        public string Lon { get; set; }// lng?
+
+
+        //TODO handle missing case
+        [JsonProperty("alt")]
+        public string Alt { get; set; }
+
+
+        [JsonProperty("hdg")]
+        public string Hdg { get; set; }
+
+        [JsonProperty("cog")]
+        public string Cog { get; set; }
+
+        [JsonProperty("sog")]
+        private string Sog { set { Vel = value; } }
+
+        [JsonProperty("vel")]
+        public string Vel { get; set; }
+
+
+        [JsonProperty("range")]
+        public string Range { get; set; }
+
+        [JsonProperty("bearing")]
+        public string Bearing { get; set; }
+
+
+        [JsonProperty("our_lat")]
+        public string OurLat { get; set; }
+
+        [JsonProperty("our_lon")]
+        public string OurLon { get; set; }
+
+        [JsonProperty("our_alt")]
+        public string OurAlt { get; set; }
+
+        [JsonProperty("our_hdg")]
+        public string OurHdg { get; set; }
+
+        [JsonProperty("lup")]
+        public string Lup { get; set; }
+
+        [JsonProperty("fup")]
+        public string Fup { get; set; }
+
+        [JsonProperty("age")]
+        public string Age { get; set; }
+
+        [JsonProperty("init_time")]
+        public string InitTime { get; set; }
+
+        [JsonProperty("info_time")]
+        public string InfoTime { get; set; }
+
+
+
+    }
+
+    //TODO ondeserialise
+    public class ASDB_Contact : Contact
+    {
+
+        public static readonly IList<string> EmitterTypeADSB = new List<string>
+        {
+            "No Info", "Light", "Small", "Large", "High Vortex Large", "Heavy", "Highly Maneuverable",
+            "Rotocraft", "Unassigned", "Glider", "Lighter Air", "Parachute", "Ultra Light", "Unassigned2",
+            "UAV", "Space", "Unassigned3", "Emergency Surface", "Service Surface", "Point Obstacle"
+        };
+
+        public string SensorType => "ADSB";
+
+        private int _icao = 0;
+
+        //  = parseFloat(xml.find('icao').text()).toString(16).toUpperCase(); //adsb specific
+        [JsonProperty("icao")]
+        public string Icao
+        {
+            set { _icao = int.Parse(value); }
+            get { return _icao.ToString("X"); }
+        }
+
+        //  = EmitterTypeADSB[parseInt(xml.find('et').text())]; //https://mavlink.io/en/messages/common.html#ADSB_EMITTER_TYPE
+        [JsonProperty("et")]
+        [JsonIgnore]
+        private string EmitterType { set; get; }
+
+        public string VehicleType { get { return EmitterTypeADSB[int.Parse(EmitterType ?? "0")]; } }
+    }
+
+    public class AIS_Contact : Contact
+    {
+
+            public string SensorType => "AIS";
+
+            [JsonProperty("mmsi")]
+            public string Mmsi {get; set;}
+
+            [JsonProperty("st")]
+            public string ShipType {get; set;}
+
+            public string VehicleType {get {return ShipType;}}
+
+            [JsonProperty("len")]
+            public string Len {get; set;}
+
+            [JsonProperty("beam")]
+            public string Beam {get; set;}
+
+            [JsonProperty("ps")]
+            public string Ps {get; set;}
+
+            [JsonProperty("pb")]
+            public string Pb {get; set;}
+            
+            [JsonProperty("class")]
+            public string AisClass {get; set;}
+            
+            [JsonProperty("cs")]
+            public string Callsign {get; set;}
+    }
+
+
     public class DroneSensors
     {
         public string Name { get; set; }
@@ -30,6 +193,7 @@ namespace RawDataToClientData
         public string CameraAliases { get; set; }
         public string Cameras { get; set; }
         public bool IsSensitive { get; set; }
+        public string Contacts { get; set; }
 
         public async static Task<string> GetSensors(string name, string data, string aliases, string cameras)
         {
@@ -51,6 +215,11 @@ namespace RawDataToClientData
 
             var batteryVoltages = new List<string>();
             var batteryPercentages = new List<string>();
+
+            // var contacts_json = json["contacts"]?["contact"] ?? new JObject();
+            var contactsJson = (json["contacts"] as JObject)?["contact"] ?? new JObject();
+            parseContacts(contactsJson);
+
 
             if (json.ContainsKey("tqb"))
             {
@@ -99,9 +268,47 @@ namespace RawDataToClientData
                 BatteryPercentages = String.Join(',', batteryPercentages),
                 CameraAliases = aliases.Trim(','),
                 Cameras = cameras,
-                IsSensitive = isSensitive
+                IsSensitive = isSensitive,
+                Contacts = contactsJson.ToString()
             };
             return JsonConvert.SerializeObject(sensors);
+        }
+
+        private static void parseContacts(JToken json)
+        {
+            if (!(json is JArray))
+            {
+                return; // handle single object case
+            }
+            var contactsJsonArray = json as JArray;
+            if (contactsJsonArray == null)
+            {
+                return;
+            }
+
+            var settings = new JsonSerializerSettings{ContractResolver = new ContactOutputFormat()};
+
+            foreach (var contact in contactsJsonArray)
+            {
+                if (contact["sensortype"].ToString() == "8")
+                {
+                    Console.WriteLine("contact json:");
+                    Console.WriteLine(contact);
+                    Console.WriteLine("ADSB:");
+                    var adsb = JsonConvert.DeserializeObject<ASDB_Contact>(contact.ToString());
+                    // Console.WriteLine(adsb.ToString());
+                    Console.WriteLine(JsonConvert.SerializeObject(adsb, settings));
+                } else if (contact["sensortype"].ToString() == "1") {
+                    Console.WriteLine("contact json:");
+                    Console.WriteLine(contact);
+                    Console.WriteLine("AIS:");
+                    var ais = JsonConvert.DeserializeObject<AIS_Contact>(contact.ToString());
+                    // Console.WriteLine(adsb.ToString());
+                    Console.WriteLine(JsonConvert.SerializeObject(ais, settings));
+                }
+                // var x = JsonConvert.DeserializeObject<Contact>(contact.ToString());
+                // Console.WriteLine($"sensor: {x.sensortype}\n");
+            }
         }
 
 
