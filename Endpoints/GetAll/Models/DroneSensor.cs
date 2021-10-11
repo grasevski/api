@@ -21,7 +21,7 @@ namespace ociusApi
             {"Bluey",  "#35b5e5"}, // Blue
             {"Beacon", "#ff0000"}, // Red
             {"Bonnie", "#ffff00"}, // Yellow
-            {"Brizo",  "5f08c2"},  // Dark Purple
+            {"Brizo",  "#5f08c2"},  // Dark Purple
             {"Beth",   "#ffffff"}, // White
             {"Bob",    "#b3b3b3"}, // Grey/Silver
             {"Bruce",  "#ffff00"}  // Yellow
