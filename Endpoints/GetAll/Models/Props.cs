@@ -15,7 +15,7 @@ namespace ociusApi
         public string Heading { get; set; } = "0";
         public List<string> Batteries { get; set; } = new List<string>();
         public List<string> BatteryPercentages { get; set; } = new List<string>();
-        public List<string> Cameras { get; set; } = new List<string>();
+        public IList<Dictionary<string, string>> Cameras { get; set; } = new List<Dictionary<string, string>>{};
         public Location Location { get; set; } 
     }
 

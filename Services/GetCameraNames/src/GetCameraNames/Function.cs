@@ -32,6 +32,8 @@ namespace GetCameraNames
     {
         public string Id { get; set; }
         public string Name { get; set; }
+
+        public string Alias { get; set; }
     }
 
     public class CameraResponse
@@ -78,6 +80,8 @@ namespace GetCameraNames
                 if (drones.ContainsKey(camera.Id))
                 {
                     drones[camera.Id].Cameras += $"{camera.Name},";
+                    drones[camera.Id].Aliases += $"{camera.Alias},"; // TODO replace with json obj
+
                 }
             }
 
@@ -100,7 +104,6 @@ namespace GetCameraNames
 
             foreach (var drone in drones)
             {
-                drone.Cameras = string.Empty;
                 result.Add(drone.Id, drone);
             }
 
@@ -143,17 +146,19 @@ namespace GetCameraNames
             foreach (var cam in FilterCameras(xdoc))
             {
                 var elem = cam.Element("Name");
+                var alias = cam.Element("Alias").Value;
                 var name = elem.Value.Split('_');
-                var drone = new DroneCamera { Id = name.First(), Name = name.Last() };
+                var drone = new DroneCamera { Id = name.First(), Name = name.Last(), Alias = alias };
                 result.Add(drone);
             }
 
             return result;
         }
 
-        public static IEnumerable<XElement> FilterCameras(XDocument xdoc){
+        public static IEnumerable<XElement> FilterCameras(XDocument xdoc)
+        {
 
-            IEnumerable<XElement> filteredCameras = 
+            IEnumerable<XElement> filteredCameras =
                 from cam in xdoc.Descendants("Camera")
                 where (string)cam.Element("Record") == "True"
                 select cam;
@@ -187,8 +192,10 @@ namespace GetCameraNames
     public class Drone
     {
         public string Id { get; set; }
-        public string Name { get; set; }
-        public string Cameras { get; set; }
+        public string Name { get; set; } = "";
+        public string Cameras { get; set; } = "";
+
+        public string Aliases { get; set; } = "";
     }
 
     public static class Api

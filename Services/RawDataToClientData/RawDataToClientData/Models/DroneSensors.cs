@@ -13,7 +13,6 @@ namespace RawDataToClientData
     {
         public string Name { get; set; }
         public string Status { get; set; }
-
         public string Air_temp { get; set; }
         public string Water_depth { get; set; }
         public string Water_temp { get; set; }
@@ -27,10 +26,12 @@ namespace RawDataToClientData
         public string Lon { get; set; }
         public string Batteries { get; set; }
         public string BatteryPercentages { get; set; }
+
+        public string CameraAliases { get; set; }
         public string Cameras { get; set; }
         public bool IsSensitive { get; set; }
 
-        public async static Task<string> GetSensors(string name, string data, string cameras)
+        public async static Task<string> GetSensors(string name, string data, string aliases, string cameras)
         {
             var json = JsonConvert.DeserializeObject(data) as JObject;
             var mavpos = json["mavpos"] ?? new JObject();
@@ -96,6 +97,7 @@ namespace RawDataToClientData
                 Lon = lon,
                 Batteries = String.Join(',', batteryVoltages),
                 BatteryPercentages = String.Join(',', batteryPercentages),
+                CameraAliases = aliases.Trim(','),
                 Cameras = cameras,
                 IsSensitive = isSensitive
             };
