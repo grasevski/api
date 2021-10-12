@@ -14,7 +14,7 @@ namespace ociusApi
         public Props Props { get; set; } = new Props();
 
         public string BoatColor { get; set; } = "#35b5e5"; // Default blue
-        public string SailColor => "#2f292d";
+        public string SailColor => "#35b5e5";
 
         //TODO Move hardcoded colors into config table.
         private static readonly Dictionary<string, string> NameToColor = new Dictionary<string, string> {
