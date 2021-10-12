@@ -92,18 +92,18 @@ namespace ociusApi
         }
 
 
-        private static Dictionary<string, string> PairCameraAliases(string aliasesStr, string camerasStr)
+        private static IList<Dictionary<string, string>>PairCameraAliases(string aliasesStr, string camerasStr)
         {
             if (camerasStr.Length == 0)
             {
-                return new Dictionary<string, string> { };
+                return new List<Dictionary<string, string>>{};
             }
 
             var aliases = aliasesStr.Split(",");
             var cameras = camerasStr.Split(",");
 
-            return cameras.Zip(aliases, (v, k) => new { k, v })
-                          .ToDictionary(p => p.k, p => p.v);
+            return cameras.Zip(aliases, (v, k) => new Dictionary<string,string>{{k,v}})
+                          .ToList();
         }
 
         private static List<string> StringToList(string value)
