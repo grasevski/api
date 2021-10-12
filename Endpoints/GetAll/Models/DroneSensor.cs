@@ -14,7 +14,7 @@ namespace ociusApi
         public Props Props { get; set; } = new Props();
 
         public string BoatColor { get; set; } = "#35b5e5"; // Default blue
-        public string SailColor => "#2f292d";
+        public string SailColor => "#35b5e5";
 
         //TODO Move hardcoded colors into config table.
         private static readonly Dictionary<string, string> NameToColor = new Dictionary<string, string> {
@@ -34,14 +34,20 @@ namespace ociusApi
             var location = new Location();
             var props = new Props();
 
+            var cameras = "";
+            var aliases = "";
+
+
             props.Batteries = new List<string>();
             props.BatteryPercentages = new List<string>();
-            props.Cameras = new List<string>();
+
+
 
             foreach (KeyValuePair<string, AttributeValue> kvp in attributes)
             {
                 var key = kvp.Key;
                 var value = kvp.Value;
+
 
                 switch (key)
                 {
@@ -59,17 +65,21 @@ namespace ociusApi
                     case "Heading": props.Heading = value?.S ?? "0"; break;
                     case "Batteries": props.Batteries = StringToList(value?.S ?? ""); break;
                     case "BatteryPercentages": props.BatteryPercentages = StringToList(value?.S ?? ""); break;
-                    case "Cameras": props.Cameras = StringToList(value?.S ?? ""); break;
                     case "Lat": coordinates.Lat = value?.S ?? "0"; break;
                     case "Lon": coordinates.Lon = value?.S ?? "0"; break;
+                    case "Cameras": cameras = value?.S ?? ""; break;
+                    case "CameraAliases": aliases = value?.S ?? ""; break;
                 }
             }
+
+            props.Cameras = PairCameraAliases(aliases, cameras);
 
             location.Coordinates = coordinates;
             props.Location = location;
             drone.Props = props;
 
-            if (NameToColor.ContainsKey(drone.Name)) {
+            if (NameToColor.ContainsKey(drone.Name))
+            {
                 drone.BoatColor = NameToColor[drone.Name];
             }
 
@@ -79,6 +89,21 @@ namespace ociusApi
         public static bool IsValidDrone(DroneSensor drone)
         {
             return (drone?.Status ?? "INVALID") != "INVALID";
+        }
+
+
+        private static Dictionary<string, string> PairCameraAliases(string aliasesStr, string camerasStr)
+        {
+            if (camerasStr.Length == 0)
+            {
+                return new Dictionary<string, string> { };
+            }
+
+            var aliases = aliasesStr.Split(",");
+            var cameras = camerasStr.Split(",");
+
+            return cameras.Zip(aliases, (v, k) => new { k, v })
+                          .ToDictionary(p => p.k, p => p.v);
         }
 
         private static List<string> StringToList(string value)

@@ -39,12 +39,12 @@ namespace RawDataToClientData
 
                 Console.WriteLine("camera exists: " + cameraExists);
 
-                var droneCameras = cameraExists ? cameras[drone.Name] : "";
+                var (aliases, droneCameras) = cameraExists ? cameras[drone.Name] : ("", "");
 
                 Console.WriteLine("Drone cameras " + droneCameras);
 
                 var droneLocation = await DroneLocation.GetLocationJson(drone.Name, drone.Data);
-                var droneSensors = await DroneSensors.GetSensors(drone.Name, drone.Data, droneCameras);
+                var droneSensors = await DroneSensors.GetSensors(drone.Name, drone.Data, aliases, droneCameras);
 
                 await DroneRepository.InsertDrone(droneLocation, "DroneDataLocations", drone.Timestamp);
                 await DroneRepository.InsertDrone(droneSensors, "DroneDataSensors", drone.Timestamp);

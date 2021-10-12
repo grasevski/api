@@ -13,6 +13,7 @@ namespace GetCameraImages
         public string Id { get; set; }
         public string Name { get; set; }
         public List<string> Cameras { get; set; }
+        public string Aliases {get; set;}
     }
 
     public class Function
@@ -41,7 +42,7 @@ namespace GetCameraImages
                     urls.Add(url);
                 }
 
-                var databaseResponse = await Database.InsertCameraUrls(date, timestamp, droneCamera.Name, urls);
+                var databaseResponse = await Database.InsertCameraUrls(date, timestamp, droneCamera, urls);
 
                 Console.WriteLine("database response " + databaseResponse);
 

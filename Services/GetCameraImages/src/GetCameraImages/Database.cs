@@ -13,7 +13,7 @@ namespace GetCameraImages
         private static readonly AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         private static readonly Table table = Table.LoadTable(client, "CameraImageUrls");
 
-        public async static Task<IEnumerable<string>> InsertCameraUrls(string date, long timestamp, string drone, List<string> urls)
+        public async static Task<IEnumerable<string>> InsertCameraUrls(string date, long timestamp, DroneCamera drone, List<string> urls)
         {
             var validUrls = urls.Where(url => !url.StartsWith(Constants.ErrorPrefix)).Select(url => "https://images.ocius.com.au/" + url);
             var value = string.Join(",", validUrls);
@@ -64,15 +64,15 @@ namespace GetCameraImages
 
             foreach (KeyValuePair<string, AttributeValue> attribute in attributes)
             {
-                if (attribute.Key == "Id") result.Id = attribute.Value?.S ?? "";
-
-                if (attribute.Key == "Name") result.Name = attribute.Value?.S ?? "";
-
-                if (attribute.Key == "Cameras")
+                switch (attribute.Key)
                 {
-                    var rawCameras = attribute.Value?.S ?? "";
-                    var cameras = rawCameras.Trim(',').Split(',').ToList();
-                    result.Cameras = cameras;
+                    case "Id": result.Id = attribute.Value?.S ?? ""; break;
+                    case "Name": result.Name = attribute.Value?.S ?? ""; break;
+                    case "Aliases": result.Aliases = attribute.Value?.S ?? ""; break;
+                    case "Cameras":
+                        var rawCameras = attribute.Value?.S ?? "";
+                        result.Cameras = rawCameras.Trim(',').Split(',').ToList();
+                        break;
                 }
             }
 
@@ -84,14 +84,15 @@ namespace GetCameraImages
             return queryResponse != null && queryResponse.Items != null && queryResponse.Items.Any();
         }
 
-        private static Document CreateCameraDocument(string date, long timestamp, string drone, string cameras)
+        private static Document CreateCameraDocument(string date, long timestamp, DroneCamera drone, string cameras)
         {
             return new Document
             {
                 ["Date"] = date,
                 ["Timestamp"] = timestamp,
-                ["Name"] = drone, 
-                ["Cameras"] = cameras
+                ["Name"] = drone.Name,
+                ["Cameras"] = cameras,
+                ["Aliases"] = drone.Aliases,
             };
         }
 
