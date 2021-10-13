@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RawDataToClientData.Repositories;
+using System.Runtime.Serialization;
 
 using System.ComponentModel; // Debug
 using System.Text;
@@ -14,19 +15,21 @@ namespace RawDataToClientData
 {
 
     // Defines serialisation format
-    public class ContactOutputFormat : DefaultContractResolver {
-
-    protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+    public class ContactOutputFormat : DefaultContractResolver
     {
-        IList<JsonProperty> properties = base.CreateProperties(type, memberSerialization);
 
-        foreach (var prop in properties) {
-            prop.PropertyName = prop.UnderlyingName;
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            IList<JsonProperty> properties = base.CreateProperties(type, memberSerialization);
+
+            foreach (var prop in properties)
+            {
+                prop.PropertyName = prop.UnderlyingName;
+            }
+
+            return properties;
         }
-
-        return properties;
     }
-}
 
     public class Contact
     {
@@ -76,7 +79,6 @@ namespace RawDataToClientData
         [JsonProperty("bearing")]
         public string Bearing { get; set; }
 
-
         [JsonProperty("our_lat")]
         public string OurLat { get; set; }
 
@@ -103,13 +105,21 @@ namespace RawDataToClientData
 
         [JsonProperty("info_time")]
         public string InfoTime { get; set; }
-
-
-
     }
 
+    public class Radar_Contact : Contact
+    {
+        public string SensorType => "RADAR";
+    }
+
+    public class Unknown_Contact : Contact
+    {
+        public string SensorType => "Unknown";
+    }
+
+
     //TODO ondeserialise
-    public class ASDB_Contact : Contact
+    public class ADSB_Contact : Contact
     {
 
         public static readonly IList<string> EmitterTypeADSB = new List<string>
@@ -137,40 +147,128 @@ namespace RawDataToClientData
         private string EmitterType { set; get; }
 
         public string VehicleType { get { return EmitterTypeADSB[int.Parse(EmitterType ?? "0")]; } }
+
+        public string Url { get; set; } = "";
+
+        public string CallsignUrl { get; set; } = "";
+
+        [OnDeserialized]
+        private void OnDeserializedMethod(StreamingContext context)
+        {
+            //TODO change empty handling
+            if (Icao != null)
+            {
+                Url = "https://opensky-network.org/aircraft-profile?icao24=" + Icao.Trim();
+            }
+
+            if (Name != null)
+            {
+                CallsignUrl = "https://www.flightradar24.com/" + Name.Trim();
+            }
+        }
     }
 
     public class AIS_Contact : Contact
     {
 
-            public string SensorType => "AIS";
+        public string SensorType => "AIS";
 
-            [JsonProperty("mmsi")]
-            public string Mmsi {get; set;}
+        [JsonProperty("mmsi")]
+        public string Mmsi { get; set; }
 
-            [JsonProperty("st")]
-            public string ShipType {get; set;}
+        [JsonProperty("st")]
+        public string ShipType { get; set; }
 
-            public string VehicleType {get {return ShipType;}}
+        public string VehicleType { get { return ShipType; } }
 
-            [JsonProperty("len")]
-            public string Len {get; set;}
+        [JsonProperty("len")]
+        public string Len { get; set; }
 
-            [JsonProperty("beam")]
-            public string Beam {get; set;}
+        [JsonProperty("beam")]
+        public string Beam { get; set; }
 
-            [JsonProperty("ps")]
-            public string Ps {get; set;}
+        [JsonProperty("ps")]
+        public string Ps { get; set; }
 
-            [JsonProperty("pb")]
-            public string Pb {get; set;}
-            
-            [JsonProperty("class")]
-            public string AisClass {get; set;}
-            
-            [JsonProperty("cs")]
-            public string Callsign {get; set;}
+        [JsonProperty("pb")]
+        public string Pb { get; set; }
+
+        [JsonProperty("class")]
+        public string AisClass { get; set; }
+
+        [JsonProperty("cs")]
+        public string Callsign { get; set; }
+
+        public string Url { get; set; } = "";
+
+        [OnDeserialized]
+        private void OnDeserializedMethod(StreamingContext context)
+        {
+            //TODO change empty handling
+            if (Mmsi != null)
+            {
+                Url = "http://www.marinetraffic.com/en/ais/details/ships/mmsi:" + Mmsi;
+                // I could parse this into href tag
+                // or into a nested object
+            }
+        }
     }
 
+    public class ContactFactory
+    {
+
+        public static IList<Contact> DeserialiseContact(JToken json)
+        {
+            if (json is JArray)
+            {
+                return DeserialiseContact(json as JArray);
+            }
+
+            if (json is JObject)
+            {
+                return new List<Contact> { DeserialiseContact(json as JObject) };
+            }
+
+            return new List<Contact> { };
+        }
+
+        public static IList<Contact> DeserialiseContact(JArray json)
+        {
+            var contacts = new List<Contact> { };
+            foreach (JObject contactJson in json)
+            {
+                contacts.Add(DeserialiseContact(contactJson));
+            }
+
+            return contacts;
+        }
+
+
+        public static Contact DeserialiseContact(JObject contactJson)
+        {
+            var sensorType = contactJson["sensortype"]?.ToString();
+
+            Contact contact;
+            switch (sensorType)
+            {
+                case "1":
+                    contact = contactJson.ToObject<AIS_Contact>();
+                    break;
+                case "8":
+                    contact = contactJson.ToObject<ADSB_Contact>();
+                    break;
+                case "12":
+                case "13":
+                    contact = contactJson.ToObject<Radar_Contact>();
+                    break;
+                default:
+                    contact = new Unknown_Contact(); //TODO replace
+                    break;
+            }
+
+            return contact;
+        }
+    }
 
     public class DroneSensors
     {
@@ -276,39 +374,28 @@ namespace RawDataToClientData
 
         private static void parseContacts(JToken json)
         {
-            if (!(json is JArray))
-            {
-                return; // handle single object case
-            }
-            var contactsJsonArray = json as JArray;
-            if (contactsJsonArray == null)
-            {
-                return;
-            }
 
-            var settings = new JsonSerializerSettings{ContractResolver = new ContactOutputFormat()};
+            var settings = new JsonSerializerSettings { ContractResolver = new ContactOutputFormat() };
 
-            foreach (var contact in contactsJsonArray)
-            {
-                if (contact["sensortype"].ToString() == "8")
-                {
-                    Console.WriteLine("contact json:");
-                    Console.WriteLine(contact);
-                    Console.WriteLine("ADSB:");
-                    var adsb = JsonConvert.DeserializeObject<ASDB_Contact>(contact.ToString());
-                    // Console.WriteLine(adsb.ToString());
-                    Console.WriteLine(JsonConvert.SerializeObject(adsb, settings));
-                } else if (contact["sensortype"].ToString() == "1") {
-                    Console.WriteLine("contact json:");
-                    Console.WriteLine(contact);
-                    Console.WriteLine("AIS:");
-                    var ais = JsonConvert.DeserializeObject<AIS_Contact>(contact.ToString());
-                    // Console.WriteLine(adsb.ToString());
-                    Console.WriteLine(JsonConvert.SerializeObject(ais, settings));
+            var contacts = ContactFactory.DeserialiseContact(json).Where( c => !(c is Unknown_Contact));
+
+            var groups = contacts.GroupBy(c => c.Name).Where(g => g.Count() > 1);
+
+            foreach (var group in groups) {
+                Console.WriteLine(group.Key);
+                foreach (var item in group) {
+                    Console.WriteLine(JsonConvert.SerializeObject(item, settings));
                 }
-                // var x = JsonConvert.DeserializeObject<Contact>(contact.ToString());
-                // Console.WriteLine($"sensor: {x.sensortype}\n");
             }
+
+
+
+
+            // Console.WriteLine("Contact factory:");
+            // foreach (var contact in contacts)
+            // {
+            //     Console.WriteLine(JsonConvert.SerializeObject(contact, settings));
+            // }
         }
 
 
