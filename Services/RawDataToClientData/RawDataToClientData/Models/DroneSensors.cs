@@ -316,7 +316,7 @@ namespace RawDataToClientData
 
             // var contacts_json = json["contacts"]?["contact"] ?? new JObject();
             var contactsJson = (json["contacts"] as JObject)?["contact"] ?? new JObject();
-            parseContacts(contactsJson);
+            // parseContacts(contactsJson);
 
 
             if (json.ContainsKey("tqb"))
@@ -367,26 +367,27 @@ namespace RawDataToClientData
                 CameraAliases = aliases.Trim(','),
                 Cameras = cameras,
                 IsSensitive = isSensitive,
-                Contacts = contactsJson.ToString()
+                Contacts = parseContacts(contactsJson)
             };
             return JsonConvert.SerializeObject(sensors);
         }
 
-        private static void parseContacts(JToken json)
+        private static string parseContacts(JToken json)
         {
 
             var settings = new JsonSerializerSettings { ContractResolver = new ContactOutputFormat() };
 
             var contacts = ContactFactory.DeserialiseContact(json).Where( c => !(c is Unknown_Contact));
 
-            var groups = contacts.GroupBy(c => c.Name).Where(g => g.Count() > 1);
+            return JsonConvert.SerializeObject(contacts, settings);
+            // var groups = contacts.GroupBy(c => c.Name).Where(g => g.Count() > 1);
 
-            foreach (var group in groups) {
-                Console.WriteLine(group.Key);
-                foreach (var item in group) {
-                    Console.WriteLine(JsonConvert.SerializeObject(item, settings));
-                }
-            }
+            // foreach (var group in groups) {
+            //     Console.WriteLine(group.Key);
+            //     foreach (var item in group) {
+            //         Console.WriteLine(JsonConvert.SerializeObject(item, settings));
+            //     }
+            // }
 
 
 
