@@ -46,17 +46,17 @@ namespace RawDataToClientData {
             switch (sensorType)
             {
                 case AIS_ID:
-                    contact = contactJson.ToObject<AIS_Contact>();
+                    contact = contactJson.ToObject<AISContact>();
                     break;
                 case ADSB_ID:
-                    contact = contactJson.ToObject<ADSB_Contact>();
+                    contact = contactJson.ToObject<ADSBContact>();
                     break;
                 case ARPA_ID:
                 case MARPA_ID:
-                    contact = contactJson.ToObject<Radar_Contact>();
+                    contact = contactJson.ToObject<RadarContact>();
                     break;
                 default:
-                    contact = new Unknown_Contact();
+                    contact = new UnknownContact();
                     break;
             }
 

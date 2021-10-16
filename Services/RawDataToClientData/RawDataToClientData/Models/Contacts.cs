@@ -116,13 +116,13 @@ namespace RawDataToClientData {
         public abstract bool TimedOut { get; }
     }
 
-    public class Radar_Contact : Contact
+    public class RadarContact : Contact
     {
         public string SensorType => "RADAR";
         public override bool TimedOut => !(Int32.Parse(Age) <= 30 && Int32.Parse(Phase) == 3);
     }
 
-    public class Unknown_Contact : Contact
+    public class UnknownContact : Contact
     {
         public string SensorType => "Unknown";
         public override bool TimedOut => true;
@@ -130,7 +130,7 @@ namespace RawDataToClientData {
 
 
     //TODO ondeserialise
-    public class ADSB_Contact : Contact
+    public class ADSBContact : Contact
     {
 
         public static readonly IList<string> EmitterTypeADSB = new List<string>
@@ -183,7 +183,7 @@ namespace RawDataToClientData {
         }
     }
 
-    public class AIS_Contact : Contact
+    public class AISContact : Contact
     {
 
         public string SensorType => "AIS";

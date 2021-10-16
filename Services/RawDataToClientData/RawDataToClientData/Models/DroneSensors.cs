@@ -118,7 +118,7 @@ namespace RawDataToClientData
 
             var contacts =
                 from contact in ContactFactory.DeserialiseContact(json)
-                where !(contact is Unknown_Contact)
+                where !(contact is UnknownContact)
                 where !(contact.TimedOut)
                 select contact;
 
