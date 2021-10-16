@@ -73,10 +73,10 @@ namespace RawDataToClientData {
         public string Cog { get; set; } = "0";
 
         [JsonProperty("vel")]
-        public string Vel { get; set; } = "0";
+        public string Velocity { get; set; } = "0";
 
         [JsonProperty("sog")]
-        private string Sog { set { Vel = value; } }
+        private string Sog { set { Velocity = value; } }
 
         [JsonProperty("range")]
         public string Range { get; set; } = "0";
