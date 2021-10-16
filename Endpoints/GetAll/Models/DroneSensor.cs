@@ -13,15 +13,15 @@ namespace ociusApi
         public string Status { get; set; } = "INVALID";
         public Props Props { get; set; } = new Props();
 
-        public string BoatColor { get; set; } = "#35b5e5"; // Default blue
-        public string SailColor => "#35b5e5";
+        public string SailColor { get; set; } = "#35b5e5"; // Default blue
+        public string BoatColor => "#35b5e5";
 
         //TODO Move hardcoded colors into config table.
         private static readonly Dictionary<string, string> NameToColor = new Dictionary<string, string> {
             {"Bluey",  "#35b5e5"}, // Blue
             {"Beacon", "#ff0000"}, // Red
             {"Bonnie", "#ffff00"}, // Yellow
-            {"Brizo",  "#5f08c2"},  // Dark Purple
+            {"Brizo",  "#3ae019"},  // Green
             {"Beth",   "#ffffff"}, // White
             {"Bob",    "#b3b3b3"}, // Grey/Silver
             {"Bruce",  "#ffff00"}  // Yellow
@@ -80,7 +80,7 @@ namespace ociusApi
 
             if (NameToColor.ContainsKey(drone.Name))
             {
-                drone.BoatColor = NameToColor[drone.Name];
+                drone.SailColor = NameToColor[drone.Name];
             }
 
             return drone;
