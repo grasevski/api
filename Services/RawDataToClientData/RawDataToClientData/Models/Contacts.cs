@@ -171,12 +171,12 @@ namespace RawDataToClientData {
         private void OnDeserializedMethod(StreamingContext context)
         {
             //TODO change empty handling
-            if (Icao != null)
+            if (Icao != "0")
             {
                 Url = "https://opensky-network.org/aircraft-profile?icao24=" + Icao.Trim();
             }
 
-            if (Name != null)
+            if (Name != "")
             {
                 CallsignUrl = "https://www.flightradar24.com/" + Name.Trim();
             }
@@ -222,7 +222,7 @@ namespace RawDataToClientData {
         private void OnDeserializedMethod(StreamingContext context)
         {
             //TODO change empty handling
-            if (Mmsi != null)
+            if (Mmsi != "0")
             {
                 Url = "http://www.marinetraffic.com/en/ais/details/ships/mmsi:" + Mmsi;
                 // I could parse this into href tag
