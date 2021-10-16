@@ -61,10 +61,7 @@ namespace ociusApi
         {
             Console.WriteLine("Loading timespan data");
             var supportedDroneNames = await Database.GetSupportedDrones();
-            var timespan = queryString.ToObject<Timespan>();
-
-            Console.WriteLine(timespan.ToString());
-
+            var timespan = queryString.ToObject<Timespan>() ?? new Timespan();
             if (!Database.IsValidTimePeriod(timespan.Value)) return null;
 
             var ticks = Database.GetTimespan(timespan.Value);
