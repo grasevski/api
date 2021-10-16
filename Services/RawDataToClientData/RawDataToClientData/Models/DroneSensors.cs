@@ -18,6 +18,8 @@ namespace RawDataToClientData
     public class ContactOutputFormat : DefaultContractResolver
     {
 
+        public static ContactOutputFormat Instance { get; } = new ContactOutputFormat();
+
         protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
             IList<JsonProperty> properties = base.CreateProperties(type, memberSerialization);
@@ -31,90 +33,117 @@ namespace RawDataToClientData
         }
     }
 
-    public class Contact
-    {
+    // public class TrimValueConverter : JsonConverter
+    // {
+    //     public override bool CanRead => true;
+    //     public override bool CanWrite => false;
 
-        // this.age = Infinity;
+    //     public override bool CanConvert(Type objectType) => objectType == typeof(string);
+
+    //     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    //     {
+    //         var value = reader.Value as string;
+    //         return value?.Trim();
+    //     }
+
+    //     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    //     {
+    //         throw new NotImplementedException("Only used for Deserialization");
+    //     }
+    // }
+
+
+    public abstract class Contact
+    {
         [JsonProperty("sensorid")]
-        public string SensorId { get; set; }
+        public string SensorId { get; set; } = "0";
 
         [JsonProperty("contactid")]
-        public string ContactId { get; set; }
+        public string ContactId { get; set; } = "0";
 
         [JsonProperty("phase")]
-        public string Phase { get; set; }
+        public string Phase { get; set; } = "0";
+
+
+        private string _name = "";
 
 
         [JsonProperty("name")]
-        public string Name { get; set; } = ""; //TODO set defaults for all
+        public string Name
+        {
+            get { return _name; }
+            set { _name = value.Trim(); }
+        }
 
         [JsonProperty("lat")]
-        public string Lat { get; set; }
+        public string Lat { get; set; } = "0";
 
         [JsonProperty("lon")]
-        public string Lon { get; set; }// lng?
+        public string Lon { get; set; } = "0";
 
-
-        //TODO handle missing case
         [JsonProperty("alt")]
-        public string Alt { get; set; }
+        public string Alt { get; set; } = "0";
 
 
         [JsonProperty("hdg")]
-        public string Hdg { get; set; }
+        public string Heading { get; set; } = "0";
 
         [JsonProperty("cog")]
-        public string Cog { get; set; }
+        public string Cog { get; set; } = "0";
 
         [JsonProperty("sog")]
         private string Sog { set { Vel = value; } }
 
         [JsonProperty("vel")]
-        public string Vel { get; set; }
+        public string Vel { get; set; } = "0";
 
 
         [JsonProperty("range")]
-        public string Range { get; set; }
+        public string Range { get; set; } = "0";
 
         [JsonProperty("bearing")]
-        public string Bearing { get; set; }
+        public string Bearing { get; set; } = "0";
 
         [JsonProperty("our_lat")]
-        public string OurLat { get; set; }
+        public string OurLat { get; set; } = "0";
 
         [JsonProperty("our_lon")]
-        public string OurLon { get; set; }
+        public string OurLon { get; set; } = "0";
 
         [JsonProperty("our_alt")]
-        public string OurAlt { get; set; }
+        public string OurAlt { get; set; } = "0";
 
         [JsonProperty("our_hdg")]
-        public string OurHdg { get; set; }
+        public string OurHdg { get; set; } = "0";
 
         [JsonProperty("lup")]
-        public string Lup { get; set; }
+        public string LastUpdated { get; set; } = "0";
 
         [JsonProperty("fup")]
-        public string Fup { get; set; }
+        public string FirstSeen { get; set; } = "0";
 
         [JsonProperty("age")]
-        public string Age { get; set; }
+        public string Age { get; set; } = "0";
 
         [JsonProperty("init_time")]
-        public string InitTime { get; set; }
+        public string InitTime { get; set; } = "0";
 
         [JsonProperty("info_time")]
-        public string InfoTime { get; set; }
+        public string InfoTime { get; set; } = "0";
+
+        public abstract bool TimedOut { get; }
     }
 
     public class Radar_Contact : Contact
     {
         public string SensorType => "RADAR";
+        public override bool TimedOut => !(Int32.Parse(Age) <= 30 && Int32.Parse(Phase) == 3);
     }
 
     public class Unknown_Contact : Contact
     {
         public string SensorType => "Unknown";
+        public override bool TimedOut => true;
     }
 
 
@@ -144,13 +173,17 @@ namespace RawDataToClientData
         //  = EmitterTypeADSB[parseInt(xml.find('et').text())]; //https://mavlink.io/en/messages/common.html#ADSB_EMITTER_TYPE
         [JsonProperty("et")]
         [JsonIgnore]
-        private string EmitterType { set; get; }
+        private string EmitterType { set; get; } = "0";
 
-        public string VehicleType { get { return EmitterTypeADSB[int.Parse(EmitterType ?? "0")]; } }
+        public string VehicleType => EmitterTypeADSB[int.Parse(EmitterType ?? "0")];
 
         public string Url { get; set; } = "";
 
+        public string CallSign => Name;
+
         public string CallsignUrl { get; set; } = "";
+
+        public override bool TimedOut => !(Int32.Parse(Age) <= 300);
 
         [OnDeserialized]
         private void OnDeserializedMethod(StreamingContext context)
@@ -174,32 +207,35 @@ namespace RawDataToClientData
         public string SensorType => "AIS";
 
         [JsonProperty("mmsi")]
-        public string Mmsi { get; set; }
+        public string Mmsi { get; set; } = "0";
 
         [JsonProperty("st")]
-        public string ShipType { get; set; }
+        private string ShipType { get; set; } = "";
 
-        public string VehicleType { get { return ShipType; } }
+        public string VehicleType => ShipType;
 
         [JsonProperty("len")]
-        public string Len { get; set; }
+        public string Length { get; set; } = "0";
 
         [JsonProperty("beam")]
-        public string Beam { get; set; }
+        public string Beam { get; set; } = "0";
 
         [JsonProperty("ps")]
-        public string Ps { get; set; }
+        public string Ps { get; set; } = "";
 
         [JsonProperty("pb")]
-        public string Pb { get; set; }
+        public string Pb { get; set; } = "";
 
         [JsonProperty("class")]
-        public string AisClass { get; set; }
+        public string AisClass { get; set; } = "";
 
         [JsonProperty("cs")]
-        public string Callsign { get; set; }
+        public string Callsign { get; set; } = "";
 
         public string Url { get; set; } = "";
+
+
+        public override bool TimedOut => !(Int32.Parse(Age) <= 1800);
 
         [OnDeserialized]
         private void OnDeserializedMethod(StreamingContext context)
@@ -262,7 +298,7 @@ namespace RawDataToClientData
                     contact = contactJson.ToObject<Radar_Contact>();
                     break;
                 default:
-                    contact = new Unknown_Contact(); //TODO replace
+                    contact = new Unknown_Contact();
                     break;
             }
 
@@ -375,9 +411,15 @@ namespace RawDataToClientData
         private static string parseContacts(JToken json)
         {
 
-            var settings = new JsonSerializerSettings { ContractResolver = new ContactOutputFormat() };
+            var settings = new JsonSerializerSettings { ContractResolver = ContactOutputFormat.Instance };
 
-            var contacts = ContactFactory.DeserialiseContact(json).Where( c => !(c is Unknown_Contact));
+            var contacts =
+                from contact in ContactFactory.DeserialiseContact(json)
+                where !(contact is Unknown_Contact)
+                where !(contact.TimedOut)
+                select contact;
+
+
 
             return JsonConvert.SerializeObject(contacts, settings);
             // var groups = contacts.GroupBy(c => c.Name).Where(g => g.Count() > 1);
