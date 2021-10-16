@@ -39,11 +39,32 @@ namespace ociusApi
             return CreateApiResponse(dronesJson);
         }
 
+
+
+        public static async Task<ApiResponse> GetContacts()
+        {
+            Console.WriteLine("Loading Contacts");
+            var supportedDroneNames = await Database.GetSupportedDrones();
+            var contacts = await Database.GetContacts(Today, supportedDroneNames);
+            var contactsI = contacts.Select(c => JsonConvert.DeserializeObject(c) as JArray);
+            
+            var x = 
+                (from c in contacts
+                let json = JsonConvert.DeserializeObject(c) as JArray
+                where json != null
+                select json).SelectMany(jobj => jobj);
+
+            var contactsJson = JsonConvert.SerializeObject(x);
+            return CreateApiResponse(contactsJson);
+        }
+
         public static async Task<ApiResponse> GetByTimespan(JToken queryString)
         {
             Console.WriteLine("Loading timespan data");
             var supportedDroneNames = await Database.GetSupportedDrones();
             var timespan = queryString.ToObject<Timespan>();
+
+            Console.WriteLine(timespan.ToString());
 
             if (!Database.IsValidTimePeriod(timespan.Value)) return null;
 
