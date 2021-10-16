@@ -64,7 +64,7 @@ namespace RawDataToClientData {
         private string Lon { set { Location["Lon"] = value; } }
 
         [JsonProperty("alt")]
-        public string Alt { get; set; } = "0";
+        public string Altitude { get; set; } = "0";
 
         [JsonProperty("hdg")]
         public string Heading { get; set; } = "0";
