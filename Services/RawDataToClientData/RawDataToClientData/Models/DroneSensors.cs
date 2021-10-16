@@ -64,7 +64,6 @@ namespace RawDataToClientData
         [JsonProperty("phase")]
         public string Phase { get; set; } = "0";
 
-
         private string _name = "";
 
 
@@ -75,11 +74,17 @@ namespace RawDataToClientData
             set { _name = value.Trim(); }
         }
 
+        public Dictionary<string, string> Location = new Dictionary<string, string>
+        {
+            {"Lat","0"},
+            {"Lon","0"},
+        };
+
         [JsonProperty("lat")]
-        public string Lat { get; set; } = "0";
+        private string Lat { set { Location["Lat"] = value; } }
 
         [JsonProperty("lon")]
-        public string Lon { get; set; } = "0";
+        private string Lon { set { Location["Lon"] = value; } }
 
         [JsonProperty("alt")]
         public string Alt { get; set; } = "0";
@@ -91,12 +96,12 @@ namespace RawDataToClientData
         [JsonProperty("cog")]
         public string Cog { get; set; } = "0";
 
-        [JsonProperty("sog")]
-        private string Sog { set { Vel = value; } }
 
         [JsonProperty("vel")]
         public string Vel { get; set; } = "0";
 
+        [JsonProperty("sog")]
+        private string Sog { set { Vel = value; } }
 
         [JsonProperty("range")]
         public string Range { get; set; } = "0";
@@ -104,17 +109,17 @@ namespace RawDataToClientData
         [JsonProperty("bearing")]
         public string Bearing { get; set; } = "0";
 
-        [JsonProperty("our_lat")]
-        public string OurLat { get; set; } = "0";
+        // [JsonProperty("our_lat")]
+        // public string OurLat { get; set; } = "0";
 
-        [JsonProperty("our_lon")]
-        public string OurLon { get; set; } = "0";
+        // [JsonProperty("our_lon")]
+        // public string OurLon { get; set; } = "0";
 
-        [JsonProperty("our_alt")]
-        public string OurAlt { get; set; } = "0";
+        // [JsonProperty("our_alt")]
+        // public string OurAlt { get; set; } = "0";
 
-        [JsonProperty("our_hdg")]
-        public string OurHdg { get; set; } = "0";
+        // [JsonProperty("our_hdg")]
+        // public string OurHdg { get; set; } = "0";
 
         [JsonProperty("lup")]
         public string LastUpdated { get; set; } = "0";
@@ -125,12 +130,14 @@ namespace RawDataToClientData
         [JsonProperty("age")]
         public string Age { get; set; } = "0";
 
-        [JsonProperty("init_time")]
-        public string InitTime { get; set; } = "0";
+        // [JsonProperty("init_time")]
+        // public string InitTime { get; set; } = "0";
 
-        [JsonProperty("info_time")]
-        public string InfoTime { get; set; } = "0";
+        // [JsonProperty("info_time")]
+        // public string InfoTime { get; set; } = "0";
 
+
+        [JsonIgnore]
         public abstract bool TimedOut { get; }
     }
 
@@ -220,11 +227,11 @@ namespace RawDataToClientData
         [JsonProperty("beam")]
         public string Beam { get; set; } = "0";
 
-        [JsonProperty("ps")]
-        public string Ps { get; set; } = "";
+        // [JsonProperty("ps")]
+        // public string Ps { get; set; } = "";
 
-        [JsonProperty("pb")]
-        public string Pb { get; set; } = "";
+        // [JsonProperty("pb")]
+        // public string Pb { get; set; } = "";
 
         [JsonProperty("class")]
         public string AisClass { get; set; } = "";
