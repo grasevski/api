@@ -16,7 +16,8 @@ namespace RawDataToClientData
         public string Name { get; set; }
         public string Status { get; set; }
         public string Air_temp { get; set; }
-        public string Water_depth { get; set; }
+        public string AirPressure {get; set;}
+        public string Water_depth { get; set; } //TODO fix nameing
         public string Water_temp { get; set; }
         public string Wind_speed { get; set; }
         public string Wind_direction { get; set; }
@@ -28,7 +29,6 @@ namespace RawDataToClientData
         public string Lon { get; set; }
         public string Batteries { get; set; }
         public string BatteryPercentages { get; set; }
-
         public string CameraAliases { get; set; }
         public string Cameras { get; set; }
         public bool IsSensitive { get; set; }
@@ -39,18 +39,19 @@ namespace RawDataToClientData
             var json = JsonConvert.DeserializeObject(data) as JObject;
             var mavpos = json["mavpos"] ?? new JObject();
 
-            var water_depth = mavpos["water_dep"] ?? "0";
-            var water_temp = mavpos["water_tmp"] ?? "0";
-            var boat_speed = mavpos["groundspeed"] ?? "0";
+            var waterDepth = mavpos["water_dep"] ?? "0";
+            var waterTemp = mavpos["water_tmp"] ?? "0";
+            var boatSpeed = mavpos["groundspeed"] ?? "0";
 
             var weatherData = mavpos["WEATHER_DATA"] ?? new JObject();
-            var wind_speed = weatherData["wind_spd"] ?? "0";
-            var wind_direction = weatherData["wind_dir"] ?? "0";
-            var air_temp = weatherData["air_temp"] ?? "0";
+            var windSpeed = weatherData["wind_spd"] ?? "0";
+            var windDirection = weatherData["wind_dir"] ?? "0";
+            var airTemp = weatherData["air_temp"] ?? "0";
+            var airPressure = weatherData["atmos_presure"] ?? "0";
 
             var waterVelocity = mavpos["WATER_VELOCITY"] ?? new JObject();
-            var current_speed = waterVelocity["curr_spd"] ?? "0";
-            var current_direction = waterVelocity["curr_dir"] ?? "0";
+            var currentSpeed = waterVelocity["curr_spd"] ?? "0";
+            var currentirection = waterVelocity["curr_dir"] ?? "0";
 
             var batteryVoltages = new List<string>();
             var batteryPercentages = new List<string>();
@@ -90,14 +91,15 @@ namespace RawDataToClientData
             {
                 Name = name,
                 Status = status,
-                Water_depth = water_depth.ToString(),
-                Air_temp = air_temp.ToString(),
-                Water_temp = water_temp.ToString(),
-                Wind_speed = wind_speed.ToString(),
-                Wind_direction = wind_direction.ToString(),
-                Current_speed = current_speed.ToString(),
-                Current_direction = current_direction.ToString(),
-                Boat_speed = boat_speed.ToString(),
+                Water_depth = waterDepth.ToString(),
+                Air_temp = airTemp.ToString(),
+                AirPressure = airPressure.ToString(),
+                Water_temp = waterTemp.ToString(),
+                Wind_speed = windSpeed.ToString(),
+                Wind_direction = windDirection.ToString(),
+                Current_speed = currentSpeed.ToString(),
+                Current_direction = currentirection.ToString(),
+                Boat_speed = boatSpeed.ToString(),
                 Heading = heading.ToString(),
                 Lat = lat,
                 Lon = lon,
