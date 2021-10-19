@@ -55,6 +55,7 @@ namespace ociusApi
                     case "Timestamp": drone.Timestamp = value?.N ?? "Not found"; break;
                     case "Status": drone.Status = value?.S ?? "Not found"; break;
                     case "Air_temp": props.Air_temp = value?.S ?? "0"; break;
+                    case "AirPressure": props.AirPressure = value?.S ?? "0"; break;
                     case "Water_depth": props.Water_depth = value?.S ?? "0"; break;
                     case "Water_temp": props.Water_temp = value?.S ?? "0"; break;
                     case "Wind_speed": props.Wind_speed = value?.S ?? "0"; break;
@@ -62,6 +63,7 @@ namespace ociusApi
                     case "Current_speed": props.Current_speed = value?.S ?? "0"; break;
                     case "Current_direction": props.Current_direction = value?.S ?? "0"; break;
                     case "Boat_speed": props.Boat_speed = value?.S ?? "0"; break;
+                    case "Sog": props.Sog = value?.S ?? "0"; break;
                     case "Heading": props.Heading = value?.S ?? "0"; break;
                     case "Batteries": props.Batteries = StringToList(value?.S ?? ""); break;
                     case "BatteryPercentages": props.BatteryPercentages = StringToList(value?.S ?? ""); break;

@@ -24,7 +24,6 @@ namespace RawDataToClientData
         public string Current_speed { get; set; }
         public string Current_direction { get; set; }
         public string Boat_speed { get; set; }
-
         public string Sog { get; set; }
         public string Heading { get; set; }
         public string Lat { get; set; }
