@@ -46,13 +46,13 @@ namespace ociusApi
             return new List<DroneSensor>(drones.Where(drone => DroneSensor.IsValidDrone(drone)));
         }
 
-        public async static Task<List<string>> GetContacts(string date, List<string> supportedDroneNames)
+        public async static Task<List<string>> GetContacts(string date, long timestamp, List<string> supportedDroneNames)
         {
             var contactsRequestTasks = new List<Task<string>>();
 
             foreach (var droneName in supportedDroneNames)
             {
-                contactsRequestTasks.Add(QueryClientForContactsAsync(date, droneName));
+                contactsRequestTasks.Add(QueryClientForContactsAsync(date, timestamp, droneName));
             }
 
             var contacts = await Task.WhenAll(contactsRequestTasks);
@@ -127,9 +127,9 @@ namespace ociusApi
         }
 
 
-        private async static Task<string> QueryClientForContactsAsync(string date, string droneName)
+        private async static Task<string> QueryClientForContactsAsync(string date, long timestamp, string droneName)
         {
-            var latestDronesRequest = Query.CreateLatestDronesRequest(date, droneName);
+            var latestDronesRequest = Query.CreateLatestDronesRequest(date, timestamp, droneName);
             QueryResponse databaseResponse = await client.QueryAsync(latestDronesRequest);
 
             if (!Query.IsValidResponse(databaseResponse))

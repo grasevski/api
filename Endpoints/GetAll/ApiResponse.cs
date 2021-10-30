@@ -52,13 +52,20 @@ namespace ociusApi
         {
             Console.WriteLine("Loading Contacts");
             var supportedDroneNames = await Database.GetSupportedDrones();
-            var contacts = await Database.GetContacts(Today, supportedDroneNames);
-            
-            var contactsEnumerable = 
+            var delay = await Database.GetDelay();
+
+            //TODO fix
+            var date = GetDate(-delay);
+            var timestamp = DateTimeOffset.UtcNow.AddDays(-delay).ToUnixTimeMilliseconds();
+
+
+            var contacts = await Database.GetContacts(Today, timestamp, supportedDroneNames);
+
+            var contactsEnumerable =
                 (from c in contacts
-                let json = JsonConvert.DeserializeObject(c) as JArray
-                where json != null
-                select json).SelectMany(jobj => jobj);
+                 let json = JsonConvert.DeserializeObject(c) as JArray
+                 where json != null
+                 select json).SelectMany(jobj => jobj);
 
             var contactsJson = JsonConvert.SerializeObject(contactsEnumerable);
             return CreateApiResponse(contactsJson);
