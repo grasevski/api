@@ -60,18 +60,18 @@ namespace ociusApi
             return new List<string>(contacts.AsEnumerable());
         }
 
-        public async static Task<List<DroneLocation>> GetByTimespan(string date, List<string> supportedDroneNames, string timePeriod)
+        public async static Task<List<DroneLocation>> GetByTimespan(string date, List<string> supportedDroneNames, long ticks, long upper)
         {
             var droneTimespans = new List<DroneLocation>();
 
-            if (!IsValidTimePeriod(timePeriod)) return droneTimespans;
-            var timespan = GetTimespan(timePeriod);
+            // if (!IsValidTimePeriod(timePeriod)) return droneTimespans;
+            // var timespan = GetTimespan(timePeriod);
 
             var timespanRequestTasks = new List<Task<List<DroneLocation>>>();
 
             foreach (var droneName in supportedDroneNames)
             {
-                timespanRequestTasks.Add(QueryClientForTimespanAsync(date, droneName, timespan));
+                timespanRequestTasks.Add(QueryClientForTimespanAsync(date, droneName, ticks, upper));
             }
 
             var databaseResponses = await Task.WhenAll(timespanRequestTasks);
@@ -141,9 +141,9 @@ namespace ociusApi
             return databaseResponse.Items[0]["Contacts"]?.S ?? string.Empty;
         }
 
-        private async static Task<List<DroneLocation>> QueryClientForTimespanAsync(string date, string droneName, long timespan)
+        private async static Task<List<DroneLocation>> QueryClientForTimespanAsync(string date, string droneName, long timespan, long upper)
         {
-            var dronesByTimespanRequest = Query.CreateDroneByTimeRequest(date, droneName, timespan);
+            var dronesByTimespanRequest = Query.CreateDroneByTimeRequest(date, droneName, timespan, upper);
             QueryResponse databaseResponse = await client.QueryAsync(dronesByTimespanRequest);
 
             if (!Query.IsValidResponse(databaseResponse))

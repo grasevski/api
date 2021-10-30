@@ -15,20 +15,22 @@ namespace ociusApi
 
         public static QueryRequest CreateSupportedDronesRequest()
         {
-            return new QueryRequest{
+            return new QueryRequest
+            {
                 TableName = "APIConfiguration",
                 KeyConditionExpression = "Setting = :partitionKeyVal",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":partitionKeyVal", new AttributeValue { S =  "Drones" } } },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":partitionKeyVal", new AttributeValue { S = "Drones" } } },
                 Limit = 1
             };
         }
 
         public static QueryRequest CreateDelayRequest()
         {
-            return new QueryRequest{
+            return new QueryRequest
+            {
                 TableName = "APIConfiguration",
                 KeyConditionExpression = "Setting = :partitionKeyVal",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":partitionKeyVal", new AttributeValue { S =  "Delay" } } },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue> { { ":partitionKeyVal", new AttributeValue { S = "Delay" } } },
                 Limit = 1
             };
         }
@@ -37,7 +39,8 @@ namespace ociusApi
         {
             // assumes every drone has a name, this is a valid assumpuption since the name is the partition key
             // If the table is changed, this may not be a valid assumption
-            if (!IsValidResponse(delayResponse)){
+            if (!IsValidResponse(delayResponse))
+            {
                 Console.WriteLine("Invalid Delay Response");
                 return 0;
             }
@@ -51,7 +54,8 @@ namespace ociusApi
         {
             // assumes every drone has a name, this is a valid assumpuption since the name is the partition key
             // If the table is changed, this may not be a valid assumption
-            if (!IsValidResponse(supportedDronesResponse)){
+            if (!IsValidResponse(supportedDronesResponse))
+            {
                 Console.WriteLine("Invalid supported drones response");
                 return new List<string>();
             }
@@ -82,33 +86,36 @@ namespace ociusApi
 
         public static DroneSensor ParseLatestDroneRequest(QueryResponse queryResponse)
         {
-            if (!IsValidResponse(queryResponse)){ // Double validity check Database.cs:35
+            if (!IsValidResponse(queryResponse))
+            { // Double validity check Database.cs:35
                 Console.WriteLine("Invalid latest drone response");
                 return new DroneSensor();
-            } 
+            }
             return DroneSensor.CreateDrone(queryResponse.Items[0]);
         }
 
         public static List<DroneLocation> ParseDroneByTimeRequest(QueryResponse queryResponse)
         {
-            if (!IsValidResponse(queryResponse)){
+            if (!IsValidResponse(queryResponse))
+            {
                 Console.WriteLine("Invalid drone time span response");
                 return new List<DroneLocation>();
-            } 
+            }
             return queryResponse.Items.Select(loc => DroneLocation.CreateDrone(loc)).ToList();
         }
 
-        public static QueryRequest CreateDroneByTimeRequest(string date, string droneName, long timestamp)
+        public static QueryRequest CreateDroneByTimeRequest(string date, string droneName, long timestamp, long upper)
         {
             var partitionKeyValue = droneName + date;
             return new QueryRequest
             {
                 TableName = "DroneDataLocations",
-                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue and #timespan > :timespan ",
-                ExpressionAttributeNames = new Dictionary<string, string> { { "#timespan", "Timestamp" }, { "#partitionKeyName", "DroneName+Date" } },
+                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue and #sortKeyName BETWEEN :timespan AND :timestamp",
+                ExpressionAttributeNames = new Dictionary<string, string> { { "#sortKeyName", "Timestamp" }, { "#partitionKeyName", "DroneName+Date" } },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     { ":partitionKeyValue", new AttributeValue { S = partitionKeyValue } },
                     { ":timespan", new AttributeValue { N = timestamp.ToString() } },
+                    { ":timestamp", new AttributeValue { N = upper.ToString()} },
                     { ":false", new AttributeValue { BOOL = false } }
                 },
                 FilterExpression = "IsSensitive = :false",
