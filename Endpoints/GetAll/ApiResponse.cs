@@ -100,12 +100,12 @@ namespace ociusApi
             Console.WriteLine("UTC MIDNIGHT timestamp: " + utcMidnight);
 
             var droneTimespans = await Database.GetByTimespan(GetDate(-delay), supportedDroneNames, delayed_ticks, timestamp);
-            // if (delayed_ticks < utcMidnight)
-            // {
-            //     Console.WriteLine("FROM YESTERDAY");
-            //     var dataFromYesterday = await Database.GetByTimespan(GetDate(-delay - 1), supportedDroneNames, delayed_ticks, DateTimeOffset.UtcNow.AddDays(-delay - 1).ToUnixTimeMilliseconds());
-            //     droneTimespans.AddRange(dataFromYesterday);
-            // }
+            if (delayed_ticks < utcMidnight)
+            {
+                Console.WriteLine("FROM YESTERDAY");
+                var dataFromYesterday = await Database.GetByTimespan(GetDate(-delay - 1), supportedDroneNames, delayed_ticks, timestamp);
+                droneTimespans.AddRange(dataFromYesterday);
+            }
 
             var dronesJson = JsonConvert.SerializeObject(FilterLocations(droneTimespans));
             return CreateApiResponse(dronesJson);

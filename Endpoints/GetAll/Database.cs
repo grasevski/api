@@ -148,10 +148,9 @@ namespace ociusApi
 
             if (!Query.IsValidResponse(databaseResponse))
             {
-                Console.WriteLine($"No timeline found for {droneName} from {date} to {timespan}");
+                Console.WriteLine($"No timeline found for {droneName} on {date} from {timespan} to {upper}");
                 return new List<DroneLocation>();
             }
-
             return Query.ParseDroneByTimeRequest(databaseResponse);
         }
     }
