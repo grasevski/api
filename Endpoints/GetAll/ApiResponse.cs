@@ -27,31 +27,33 @@ namespace ociusApi
 
         #endregion
 
-        private static string Today => GetDate(0);
-        private static string Yesterday => GetDate(-1);
 
-        public static async Task<ApiResponse> GetLatest()
+        public static async Task<ApiResponse> GetDronesDelayed()
         {
             Console.WriteLine("Loading latest data");
-            var supportedDroneNames = await Database.GetSupportedDrones();
-            var drones = await Database.GetLatest(Today, supportedDroneNames);
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
+
+            var delay = GetDateTime(await delayTask);
+            var drones = await Database.GetDroneByDateTimeAsync(delay, await supportedDroneNamesTask);
             var dronesJson = JsonConvert.SerializeObject(drones);
             return CreateApiResponse(dronesJson);
         }
 
-
-
         public static async Task<ApiResponse> GetContacts()
         {
             Console.WriteLine("Loading Contacts");
-            var supportedDroneNames = await Database.GetSupportedDrones();
-            var contacts = await Database.GetContacts(Today, supportedDroneNames);
-            
-            var contactsEnumerable = 
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
+
+            var delay = GetDateTime(await delayTask);
+            var contacts = await Database.GetContactsByDateTimeAsync(delay, await supportedDroneNamesTask);
+
+            var contactsEnumerable =
                 (from c in contacts
-                let json = JsonConvert.DeserializeObject(c) as JArray
-                where json != null
-                select json).SelectMany(jobj => jobj);
+                 let json = JsonConvert.DeserializeObject(c) as JArray
+                 where json != null
+                 select json).SelectMany(jobj => jobj);
 
             var contactsJson = JsonConvert.SerializeObject(contactsEnumerable);
             return CreateApiResponse(contactsJson);
@@ -60,24 +62,22 @@ namespace ociusApi
         public static async Task<ApiResponse> GetByTimespan(JToken queryString)
         {
             Console.WriteLine("Loading timespan data");
-            var supportedDroneNames = await Database.GetSupportedDrones();
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
+
             var timespan = queryString.ToObject<Timespan>() ?? new Timespan();
             if (!Database.IsValidTimePeriod(timespan.Value)) return null;
 
-            var ticks = Database.GetTimespan(timespan.Value);
+            var latest = GetDateTime(await delayTask);
+            var supportedDroneNames = await supportedDroneNamesTask;
 
-            Console.WriteLine("TICKS " + ticks);
+            var earliest = latest.AddMilliseconds(-Database.TimespanToMilliseconds(timespan.Value));
 
-            var utcMidnight = new DateTimeOffset(DateTime.UtcNow.Date).ToUnixTimeMilliseconds();
-            Console.WriteLine("UTC MIDNIGHT timestamp: " + utcMidnight);
+            var droneTimespans = await Database.GetByTimespan(latest.ToString("yyyyMMdd"), supportedDroneNames, earliest, latest);
 
-            var droneTimespans = await Database.GetByTimespan(Today, supportedDroneNames, timespan.Value);
-            if (ticks < utcMidnight)
-            {
-                Console.WriteLine("FROM YESTERDAY");
-                var dataFromYesterday = await Database.GetByTimespan(Yesterday, supportedDroneNames, timespan.Value);
-                droneTimespans.AddRange(dataFromYesterday);
-            }
+            Console.WriteLine("FROM YESTERDAY");
+            var dataFromYesterday = await Database.GetByTimespan(earliest.ToString("yyyyMMdd"), supportedDroneNames, earliest, latest);
+            droneTimespans.AddRange(dataFromYesterday);
 
             var dronesJson = JsonConvert.SerializeObject(FilterLocations(droneTimespans));
             return CreateApiResponse(dronesJson);
@@ -93,10 +93,10 @@ namespace ociusApi
             return new ApiResponse { StatusCode = 200, Body = json, Headers = headers };
         }
 
-
-        public static string GetDate(int offset)
+        private static DateTimeOffset GetDateTime(int dayOffset)
         {
-            return DateTime.UtcNow.AddDays(offset).ToString("yyyyMMdd");
+            return DateTimeOffset.UtcNow.AddDays(-dayOffset);
         }
+
     }
 }
