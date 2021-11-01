@@ -77,7 +77,6 @@ namespace ociusApi
                     { ":false", new AttributeValue { BOOL = false } },
                     { ":timestamp", new AttributeValue { N = timestamp.ToString()} }
                 },
-                //FilterExpression = "IsSensitive = :false AND Timestamp <= :timestamp",
                 FilterExpression = "IsSensitive = :false",
                 ScanIndexForward = false,
                 Limit = 1
@@ -104,18 +103,18 @@ namespace ociusApi
             return queryResponse.Items.Select(loc => DroneLocation.CreateDrone(loc)).ToList();
         }
 
-        public static QueryRequest CreateDroneByTimeRequest(string date, string droneName, long timestamp, long upper)
+        public static QueryRequest CreateDroneByTimeRequest(string date, string droneName, long earliest, long latest)
         {
             var partitionKeyValue = droneName + date;
             return new QueryRequest
             {
                 TableName = "DroneDataLocations",
-                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue and #sortKeyName BETWEEN :timespan AND :timestamp",
+                KeyConditionExpression = "#partitionKeyName = :partitionKeyValue and #sortKeyName BETWEEN :earliest AND :latest",
                 ExpressionAttributeNames = new Dictionary<string, string> { { "#sortKeyName", "Timestamp" }, { "#partitionKeyName", "DroneName+Date" } },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     { ":partitionKeyValue", new AttributeValue { S = partitionKeyValue } },
-                    { ":timespan", new AttributeValue { N = timestamp.ToString() } },
-                    { ":timestamp", new AttributeValue { N = upper.ToString()} },
+                    { ":earliest", new AttributeValue { N = earliest.ToString() } },
+                    { ":latest", new AttributeValue { N = latest.ToString()} },
                     { ":false", new AttributeValue { BOOL = false } }
                 },
                 FilterExpression = "IsSensitive = :false",

@@ -25,7 +25,7 @@ namespace ociusApi
                     //todo default behaviour no query
                     return await ApiResponse.GetByTimespan(queryString);
                 default:
-                    return await ApiResponse.GetLatest();
+                    return await ApiResponse.GetDronesDelayed();
             }
 
             // return queryString.HasValues

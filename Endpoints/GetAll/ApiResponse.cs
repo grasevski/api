@@ -27,40 +27,27 @@ namespace ociusApi
 
         #endregion
 
-        private static string Today => GetDate(0);
-        private static string Yesterday => GetDate(-1);
 
-        public static async Task<ApiResponse> GetLatest()
+        public static async Task<ApiResponse> GetDronesDelayed()
         {
             Console.WriteLine("Loading latest data");
-            var supportedDroneNames = await Database.GetSupportedDrones();
-            var delay = await Database.GetDelay();
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
 
-            //TODO fix
-            var date = GetDate(-delay);
-            var timestamp = DateTimeOffset.UtcNow.AddDays(-delay).ToUnixTimeMilliseconds();
-
-            //Date and timestamp both needed?
-            var drones = await Database.GetLatest(date, timestamp, supportedDroneNames);
+            var delay = GetDateTime(await delayTask);
+            var drones = await Database.GetDroneByDateTimeAsync(delay, await supportedDroneNamesTask);
             var dronesJson = JsonConvert.SerializeObject(drones);
-            //dronesJson = $"[{dronesJson}, {{\"delay\": \"{delay}\"}}, {{\"new_timestamp\": \"{timestamp}\"}}]";
             return CreateApiResponse(dronesJson);
         }
-
-
 
         public static async Task<ApiResponse> GetContacts()
         {
             Console.WriteLine("Loading Contacts");
-            var supportedDroneNames = await Database.GetSupportedDrones();
-            var delay = await Database.GetDelay();
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
 
-            //TODO fix
-            var date = GetDate(-delay);
-            var timestamp = DateTimeOffset.UtcNow.AddDays(-delay).ToUnixTimeMilliseconds();
-
-
-            var contacts = await Database.GetContacts(date, timestamp, supportedDroneNames);
+            var delay = GetDateTime(await delayTask);
+            var contacts = await Database.GetContactsByDateTimeAsync(delay, await supportedDroneNamesTask);
 
             var contactsEnumerable =
                 (from c in contacts
@@ -75,37 +62,22 @@ namespace ociusApi
         public static async Task<ApiResponse> GetByTimespan(JToken queryString)
         {
             Console.WriteLine("Loading timespan data");
-            var supportedDroneNames = await Database.GetSupportedDrones();
+            var supportedDroneNamesTask = Database.GetSupportedDrones();
+            var delayTask = Database.GetDelay();
+
             var timespan = queryString.ToObject<Timespan>() ?? new Timespan();
             if (!Database.IsValidTimePeriod(timespan.Value)) return null;
 
-            var delay = await Database.GetDelay();
+            var latest = GetDateTime(await delayTask);
+            var supportedDroneNames = await supportedDroneNamesTask;
 
-            //TODO fix
-            var date = GetDate(-delay);
-            var timestamp = DateTimeOffset.UtcNow.AddDays(-delay).ToUnixTimeMilliseconds();
+            var earliest = latest.AddMilliseconds(-Database.TimespanToMilliseconds(timespan.Value));
 
-            // Can simplify this logic: always 2 partitions worth of trail
-            var ticks = Database.GetTimespan(timespan.Value);
+            var droneTimespans = await Database.GetByTimespan(latest.ToString("yyyyMMdd"), supportedDroneNames, earliest, latest);
 
-            //Debug
-            Console.WriteLine($"Log 1: {DateTimeOffset.UtcNow.AddDays(-delay)}");
-            Console.WriteLine($"Log 2: {DateTime.UtcNow.AddDays(-delay)}");
-            // 
-            var delayed_ticks = ticks + timestamp - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-            Console.WriteLine("TICKS " + ticks);
-
-            var utcMidnight = new DateTimeOffset(DateTime.UtcNow.AddDays(-delay).Date).ToUnixTimeMilliseconds();
-            Console.WriteLine("UTC MIDNIGHT timestamp: " + utcMidnight);
-
-            var droneTimespans = await Database.GetByTimespan(GetDate(-delay), supportedDroneNames, delayed_ticks, timestamp);
-            if (delayed_ticks < utcMidnight)
-            {
-                Console.WriteLine("FROM YESTERDAY");
-                var dataFromYesterday = await Database.GetByTimespan(GetDate(-delay - 1), supportedDroneNames, delayed_ticks, timestamp);
-                droneTimespans.AddRange(dataFromYesterday);
-            }
+            Console.WriteLine("FROM YESTERDAY");
+            var dataFromYesterday = await Database.GetByTimespan(earliest.ToString("yyyyMMdd"), supportedDroneNames, earliest, latest);
+            droneTimespans.AddRange(dataFromYesterday);
 
             var dronesJson = JsonConvert.SerializeObject(FilterLocations(droneTimespans));
             return CreateApiResponse(dronesJson);
@@ -121,10 +93,10 @@ namespace ociusApi
             return new ApiResponse { StatusCode = 200, Body = json, Headers = headers };
         }
 
-
-        public static string GetDate(int offset)
+        private static DateTimeOffset GetDateTime(int dayOffset)
         {
-            return DateTime.UtcNow.AddDays(offset).ToString("yyyyMMdd");
+            return DateTimeOffset.UtcNow.AddDays(-dayOffset);
         }
+
     }
 }
