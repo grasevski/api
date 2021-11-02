@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 namespace XmlToJson
 {
+
     public static class Database
     {
         private static readonly AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -17,6 +18,7 @@ namespace XmlToJson
         public async static Task<string> InsertDrone(Drone drone, string date, long time)
         {
             var droneDocument = CreateDroneDocument(drone, date, time);
+
 
             try
             {
@@ -44,11 +46,12 @@ namespace XmlToJson
             droneDocument["Date"] = date;
             droneDocument["Timestamp"] = time;
             return droneDocument;
-        }      
+        }
 
         private static ScanRequest CreateSupportedDronesRequest()
         {
-            return new ScanRequest{
+            return new ScanRequest
+            {
                 TableName = "DroneStatus"
             };
         }

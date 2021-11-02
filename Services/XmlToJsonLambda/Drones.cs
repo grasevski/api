@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace XmlToJson
 {
@@ -21,17 +22,17 @@ namespace XmlToJson
 
         private static async Task<Dictionary<string, string>> GetDroneNames()
         {
-            var namesEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listrobots&nodeflate";
-            var droneNames = await Api.GetXml(namesEndpoint);
+            var droneNames = await AuthApi.GetXml("?listrobots&nodeflate");
             var nameJson = Json.FromXml(droneNames);
             return MapIdToName(nameJson);
         }
 
         private static async Task<JToken> GetDroneData()
         {
-            var dataEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?mavstatus&nodeflate";
-            var droneStatus = await Api.GetXml(dataEndpoint);
+
+            var droneStatus = await AuthApi.GetXml("?mavstatus&nodeflate");
             var statusJson = Json.FromXml(droneStatus);
+            
             return GetDroneJson(statusJson);
         }
 
