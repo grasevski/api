@@ -95,8 +95,8 @@ namespace GetCameraNames
 
         public async Task<IDictionary<string, Drone>> GetDroneNames()
         {
-            var namesEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listrobots&nodeflate";
-            var droneNames = await Api.GetXml(namesEndpoint);
+            var namesEndpoint = "?listrobots&nodeflate";
+            var droneNames = await AuthApi.GetXml(namesEndpoint);
             var nameJson = Json.FromXml(droneNames);
             var drones = MapIdToName(nameJson);
 
@@ -130,9 +130,9 @@ namespace GetCameraNames
 
         public async Task<IEnumerable<DroneCamera>> AddCameraNames()
         {
-            var dataEndpoint = "https://usvna.ocius.com.au/usvna/oc_server?listcameras&nodeflate";
+            var dataEndpoint = $"?listcameras&nodeflate";
 
-            var droneStatus = await Api.GetXml(dataEndpoint);
+            var droneStatus = await AuthApi.GetXml(dataEndpoint);
 
             return MapIdToCameras(droneStatus);
         }
@@ -196,15 +196,5 @@ namespace GetCameraNames
         public string Cameras { get; set; } = "";
 
         public string Aliases { get; set; } = "";
-    }
-
-    public static class Api
-    {
-        private static readonly HttpClient httpClient = new HttpClient();
-
-        public static async Task<string> GetXml(string endpoint)
-        {
-            return await httpClient.GetStringAsync(endpoint);
-        }
     }
 }

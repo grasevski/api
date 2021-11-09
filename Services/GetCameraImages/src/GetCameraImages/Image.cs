@@ -15,21 +15,18 @@ namespace GetCameraImages
         public bool HasData => Data.Length != 0;
 
         private static TransferUtility FileTransferUtility => CreateTransferUtility();
-        private static readonly HttpClient client = new HttpClient();
-
-
 
         public static async Task<DroneImage> Download(string drone, string camera)
         {
-            var imageUrl = $"https://usvna.ocius.com.au/usvna/oc_server?getliveimage&camera={drone}_{camera}&nowebp&timestamp=0&offlineimage=latestimage&quality=90";
+            var querystring = $"?getliveimage&camera={drone}_{camera}&nowebp&timestamp=0&offlineimage=latestimage&quality=90";
 
-            Console.WriteLine(imageUrl);
+            Console.WriteLine(querystring);
 
-            var response = await client.GetAsync(imageUrl);
+            var response = await AuthApi.GetAsync(querystring);
 
             return await IsFailedDownload(response)
-                ? CreateEmptyImage(imageUrl)
-                : await CreateImage(imageUrl, response);
+                ? CreateEmptyImage(AuthApi.details.Endpoint +  querystring)
+                : await CreateImage(AuthApi.details.Endpoint +  querystring, response);
         }
 
         private static async Task<bool> IsFailedDownload(HttpResponseMessage response)
