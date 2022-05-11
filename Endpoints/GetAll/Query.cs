@@ -45,10 +45,8 @@ namespace ociusApi
                 return 0;
             }
 
-            var delay = Convert.ToInt32(delayResponse.Items[0]["Value"].N);
-            return delay;
+            return GetDelayValue(delayResponse.Items[0]);
         }
-
 
         public static List<string> ParseSupportedDroneResponse(QueryResponse supportedDronesResponse)
         {
@@ -120,6 +118,12 @@ namespace ociusApi
                 FilterExpression = "IsSensitive = :false",
                 ScanIndexForward = false
             };
+        }
+
+
+        private static int GetDelayValue(Dictionary<string, AttributeValue> delayItem) {
+            var delay = delayItem["Override"].BOOL ?  delayItem["OverrideValue"].N : delayItem["Value"].N;
+            return Convert.ToInt32(delay);
         }
     }
 }
