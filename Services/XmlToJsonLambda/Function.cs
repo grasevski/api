@@ -12,7 +12,7 @@ namespace XmlToJson
 
         public async Task<string> FunctionHandler()
         {
-            var date = DateTime.UtcNow.Date.ToShortDateString();
+            var date = DateTime.UtcNow.Date.ToString("M/d/yy");
             this.supportedDrones = await Database.GetSupportedDrones();
             var drones = await Drones.GetDrones();
 
