@@ -21,7 +21,7 @@ namespace GetCameraImages
 
         public async Task<List<string>> FunctionHandler()
         {
-            var date = DateTime.UtcNow.Date.ToShortDateString();
+            var date = DateTime.UtcNow.Date.ToString("M/d/yy");
             var result = new List<string>();
 
             var droneCameras = await Database.GetDroneCameras();

@@ -20,7 +20,7 @@ namespace RawDataToClientData.Repositories
 
         private static QueryRequest CreateCameraQueryByDate(DateTime date)
         {
-            var formattedDateToPrimaryKey = $"{date.Month}/{date.Day}/{date.Year.ToString().Substring(2)}";
+            var formattedDateToPrimaryKey = date.ToString("M/d/yy");
             return new QueryRequest
             {
                 TableName = "CameraImageUrls",
@@ -44,7 +44,7 @@ namespace RawDataToClientData.Repositories
         private static QueryRequest CreateCameraQuery()
         {
             var date = DateTime.UtcNow;
-            var formattedDateToPrimaryKey = $"{date.Month}/{date.Day}/{date.Year.ToString().Substring(2)}";
+            var formattedDateToPrimaryKey = date.ToString("M/d/yy");
             return new QueryRequest
             {
                 TableName = "CameraImageUrls",
