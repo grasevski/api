@@ -16,6 +16,8 @@ namespace XmlToJson
             this.supportedDrones = await Database.GetSupportedDrones();
             var drones = await Drones.GetDrones();
 
+            await SaveDelay(drones);
+
             return await SaveDrones(drones, date);
         }
 
@@ -37,6 +39,12 @@ namespace XmlToJson
             }
 
             return string.Join("", response);
+        }
+
+
+        private async Task SaveDelay(Drones allDrones)
+        {
+            await Database.InsertDelay(allDrones.Delay);
         }
     }
 }
