@@ -14,6 +14,31 @@ namespace XmlToJson
     {
         private static readonly AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         private static readonly Table table = Table.LoadTable(client, "TimeSeriesDroneData");
+        private static readonly Table APIConfigTable = Table.LoadTable(client, "APIConfiguration");
+
+        public async static Task InsertDelay(int delay)
+        {
+            var delayDocument = CreateDelayDocument(delay);
+
+
+            try
+            {
+                await APIConfigTable.UpdateItemAsync(delayDocument);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to save delay. Exception: " + ex);
+            }
+        }
+
+
+        private static Document CreateDelayDocument(int delay)
+        {
+            var delayDocument = new Document();
+            delayDocument["Setting"] = "Delay";
+            delayDocument["Value"] =  delay;
+            return delayDocument;
+        }
 
         public async static Task<string> InsertDrone(Drone drone, string date, long time)
         {
