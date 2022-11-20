@@ -19,6 +19,7 @@ namespace ociusApi
         public List<string> BatteryPercentages { get; set; } = new List<string>();
         public IList<Dictionary<string, string>> Cameras { get; set; } = new List<Dictionary<string, string>> { };
         public Location Location { get; set; }
+        public string DistanceTravelledMeters { get; set; } = "0";
     }
 
     public class Location

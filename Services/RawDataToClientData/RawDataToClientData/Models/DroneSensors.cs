@@ -34,6 +34,7 @@ namespace RawDataToClientData
         public string Cameras { get; set; }
         public bool IsSensitive { get; set; }
         public string Contacts { get; set; }
+        public string DistanceTravelledMeters { get; set; }
 
         public async static Task<string> GetSensors(string name, string data, string aliases, string cameras)
         {
@@ -63,6 +64,7 @@ namespace RawDataToClientData
             var batteryPercentages = new List<string>();
 
             var contactsJson = (json["contacts"] as JObject)?["contact"] ?? new JObject();
+            var distanceTravelledMeters = (mavpos["OC_STATS"] ?? new JObject())["distance_travelled_m"] ?? "0";
 
 
             if (json.ContainsKey("tqb"))
@@ -115,7 +117,8 @@ namespace RawDataToClientData
                 CameraAliases = aliases.Trim(','),
                 Cameras = cameras,
                 IsSensitive = isSensitive,
-                Contacts = parseContacts(contactsJson)
+                Contacts = parseContacts(contactsJson),
+                DistanceTravelledMeters = distanceTravelledMeters.ToString()
             };
             return JsonConvert.SerializeObject(sensors);
         }
