@@ -64,7 +64,8 @@ namespace RawDataToClientData
             var batteryPercentages = new List<string>();
 
             var contactsJson = (json["contacts"] as JObject)?["contact"] ?? new JObject();
-            var distanceTravelledMeters = (mavpos["OC_STATS"] ?? new JObject())["distance_travelled_m"] ?? "0";
+            var stats = mavpos["OC_STATS"] ?? new JObject();
+            var distanceTravelledMeters = stats["distance_travelled_m"] ?? "0";
 
 
             if (json.ContainsKey("tqb"))
