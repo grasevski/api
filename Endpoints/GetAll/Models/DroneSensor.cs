@@ -71,6 +71,7 @@ namespace ociusApi
                     case "Lon": coordinates.Lon = value?.S ?? "0"; break;
                     case "Cameras": cameras = value?.S ?? ""; break;
                     case "CameraAliases": aliases = value?.S ?? ""; break;
+                    case "DistanceTravelledMeters": props.DistanceTravelledMeters = value?.S ?? "0"; break;
                 }
             }
 
