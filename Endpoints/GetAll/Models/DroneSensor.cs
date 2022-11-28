@@ -36,6 +36,7 @@ namespace ociusApi
 
             var cameras = "";
             var aliases = "";
+            var isSensitive = false;
 
 
             props.Batteries = new List<string>();
@@ -72,7 +73,19 @@ namespace ociusApi
                     case "Cameras": cameras = value?.S ?? ""; break;
                     case "CameraAliases": aliases = value?.S ?? ""; break;
                     case "DistanceTravelledMeters": props.DistanceTravelledMeters = value?.S ?? "0"; break;
+                    case "IsSensitive": isSensitive = value.BOOL; break;
                 }
+            }
+
+            if (isSensitive)
+            {
+                drone.Props = new Props();
+                coordinates.Lat = "0";
+                coordinates.Lon = "0";
+                location.Coordinates = coordinates;
+                drone.Props.Location = location;
+                drone.Props.DistanceTravelledMeters = props.DistanceTravelledMeters;
+                return drone;
             }
 
             props.Cameras = PairCameraAliases(aliases, cameras);

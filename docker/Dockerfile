@@ -29,7 +29,7 @@ RUN echo "Installing AWS CLI" \
    && rm -rf ./aws awscliv2.zip 
    
 RUN echo "Installing .NET tools" \
-    && dotnet tool install -g Amazon.Lambda.Tools \ 
+    && dotnet tool install -g Amazon.Lambda.Tools
 
 ENV PATH="{$PATH}:/home/ocius/.dotnet/tools/"
 

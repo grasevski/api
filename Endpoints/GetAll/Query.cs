@@ -72,10 +72,8 @@ namespace ociusApi
                 ExpressionAttributeNames = new Dictionary<string, string> { { "#partitionKeyName", "DroneName+Date" }, { "#sortKeyName", "Timestamp" } },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue> {
                     { ":partitionKeyValue", new AttributeValue { S = partitionKeyValue } },
-                    { ":false", new AttributeValue { BOOL = false } },
                     { ":timestamp", new AttributeValue { N = timestamp.ToString()} }
                 },
-                FilterExpression = "IsSensitive = :false",
                 ScanIndexForward = false,
                 Limit = 1
             };
